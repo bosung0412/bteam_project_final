@@ -1,0 +1,62 @@
+-- weight_chk 테이블
+CREATE TABLE weight_chk(
+  id VARCHAR2(20),
+  currentweight VARCHAR2(20),
+  futureweight VARCHAR2(20),
+  wdate DATE DEFAULT SYSDATE NOT NULL
+);
+
+-- weight_chk 외래키 설정
+ALTER TABLE weight_chk
+ADD CONSTRAINT weight_chk_fk
+FOREIGN KEY (id) REFERENCES members(id);
+
+-- weight_chk_log 테이블
+CREATE TABLE wt_chk_log(
+    log_id VARCHAR(20) PRIMARY KEY,
+    id VARCHAR(20),
+    hist_currentweight NUMBER,
+    hist_futureweight NUMBER,
+    change_date DATE DEFAULT SYSDATE NOT NULL
+);
+
+-- 시퀀스 생성
+create sequence wt_chk_log_seq
+increment by 1 start with 1;
+
+-- wt_chk_log fk 설정
+ALTER TABLE wt_chk_log
+ADD CONSTRAINT wt_chk_log_fk FOREIGN KEY (id) REFERENCES members(id);
+
+-- 트리거 생성
+CREATE OR REPLACE TRIGGER trig_wt_chk_log
+BEFORE INSERT ON wt_chk_log
+FOR EACH ROW
+BEGIN
+    -- weight_chk_log 테이블에 이전 목표 몸무게와 현재 몸무게 저장
+    INSERT INTO wt_chk_log (
+        log_id, id, hist_currentweight, hist_futureweight, change_date
+    ) VALUES (
+        :NEW.log_id,
+        :NEW.id,
+        :NEW.hist_currentweight,
+        :NEW.hist_futureweight,
+        :NEW.change_date
+    );
+END;
+
+
+
+create table users(
+    user_id varchar(30) primary key,
+    password varchar(255) not null,
+    email varchar(255) not null,
+    type varchar(10) not null,
+    role varchar(10) not null
+);
+
+create table certification(
+    user_id varchar(30) primary key,
+    email varchar(255) not null,
+    certification_number varchar(4) not null
+);

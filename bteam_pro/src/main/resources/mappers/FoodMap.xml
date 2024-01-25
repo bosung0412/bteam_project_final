@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace ="kr.co.bteam.bteam_pro.dao.FoodDao">
+    <select id="FoodList" resultType="Fvo">
+    select * from FOODS
+    </select>
+    <insert id="addFood" parameterType="Fvo">
+      INSERT  INTO  FOODS (FNO,FIMAGE,FNAME,FPROVINCE,FFPROVINCE,FCHOLESTEROL,FSALT,FPOTASIUM,FCARBOHYDRATE,FDIETARYFIBER,FPROTEIN) VALUES 
+    (FOODS_SEQ.nextVal,#{FIMAGE},#{FNAME},#{FPROVINCE},#{FFPROVINCE},#{FCHOLESTEROL},#{FSALT},#{FPOTASIUM},#{FCARBOHYDRATE},#{FDIETARYFIBER},#{FPROTEIN})
+    </insert>
+    <select id="selectFood" resultType="Fvo" parameterType="int">
+      select * from nutrient where nutrient_id = #{nutrient_id}
+    </select>
+
+    <!-- Calendar 식단 리스트와 식사타임별 총 칼로리 -->
+    <select id="selectDiet" resultType="dvo"> 
+      SELECT d.*, COALESCE(SUM(n.cal), 0) AS total_calories
+      FROM bteam.diet d
+      LEFT JOIN bteam.food_rec f ON d.diet_id = f.diet_id
+      LEFT JOIN bteam.nutrient n ON f.nutrient_id = n.nutrient_id
+      GROUP BY d.diet_id, d.member_no, d.created_at, d.img_filename, d.mealtime
+      ORDER BY d.diet_id
+    </select>
+
+    <!-- Calendar 식사 타임별 음식 정보 및 영양 정보 -->
+    <select id="selectDietInfo" resultType="divo" parameterType="int"> 
+      SELECT
+        d.diet_id, d.img_filename, d.mealtime,
+        f.frimg_filename, f.nutrient_id,
+        n.name, n.weight, n.cal, n.carbo, n.sugars, n.fat, n.protein,
+        n.calcium, n.phosphorus, n.sodium, n.potassium,
+        n.magnesium, n.iron, n.zinc, n.cholesterol, n.transfat, n.foodtype
+      FROM bteam.diet d
+      JOIN bteam.food_rec f ON d.diet_id = f.diet_id
+      JOIN bteam.nutrient n ON f.nutrient_id = n.nutrient_id
+      WHERE d.diet_id = #{diet_id}
+    </select>
+
+    <!-- Calendar 음식별 영양 정보 -->
+    <select id="selectFoodInfo" resultType="divo" parameterType="int"> 
+      SELECT
+        f.nutrient_id, f.frimg_filename,
+        n.name, n.weight, n.cal, n.carbo, n.sugars, n.fat, n.protein,
+        n.calcium, n.phosphorus, n.sodium, n.potassium,
+        n.magnesium, n.iron, n.zinc, n.cholesterol, n.transfat, n.foodtype
+      FROM bteam.food_rec f 
+      JOIN bteam.nutrient n ON f.nutrient_id = n.nutrient_id
+      WHERE f.nutrient_id = #{nutrient_id}
+    </select>
+
+    <select id="selectList" resultType = "Fvo">
+      select * from nutrient
+    </select>
+    <select id="foodDetail" resultType="Fvo">
+      select * from nutrient where nutrient_id = #{nutrient_id}
+    </select>
+    
+
+    <!-- 여러 그룹에서 랜덤으로 하나씩 선택하는 쿼리 -->
+    <select id="selectRandomMeals" resultType="Fvo">
+        <![CDATA[
+            SELECT * FROM (
+                SELECT * FROM (
+                    SELECT * FROM NUTRIENT WHERE FOODTYPE IN ('밥', '면') ORDER BY DBMS_RANDOM.VALUE
+                ) WHERE ROWNUM <= 3
+            )
+            UNION ALL
+            SELECT * FROM (
+                SELECT * FROM NUTRIENT WHERE FOODTYPE = '국' ORDER BY DBMS_RANDOM.VALUE
+            ) WHERE ROWNUM <= 3
+            UNION ALL
+            SELECT * FROM (
+                SELECT * FROM NUTRIENT WHERE FOODTYPE = '반찬1' ORDER BY DBMS_RANDOM.VALUE
+            ) WHERE ROWNUM <= 3
+            UNION ALL
+            SELECT * FROM (
+                SELECT * FROM NUTRIENT WHERE FOODTYPE = '반찬2' ORDER BY DBMS_RANDOM.VALUE
+            ) WHERE ROWNUM <= 3
+            UNION ALL
+            SELECT * FROM (
+                SELECT * FROM NUTRIENT WHERE FOODTYPE = '반찬3' ORDER BY DBMS_RANDOM.VALUE
+            ) WHERE ROWNUM <= 3
+        ]]>
+    </select>
+
+    <!-- main 해당 회원의 총 칼로리 -->
+    <select id="totalCalbyId" resultType="dvo" parameterType="dvo">
+      SELECT SUM(N.Cal) as total_calories
+      FROM "BTEAM"."DIET" D
+      INNER JOIN "BTEAM"."FOOD_REC" FR ON D."DIET_ID" = FR."DIET_ID"
+      INNER JOIN "BTEAM"."NUTRIENT" N ON FR."NUTRIENT_ID" = N."NUTRIENT_ID"
+      WHERE D."MEMBER_NO" = #{member_no}
+      AND TO_CHAR(D."CREATED_AT", 'YYYY-MM-DD') = #{created_at}
+    </select>
+</mapper>

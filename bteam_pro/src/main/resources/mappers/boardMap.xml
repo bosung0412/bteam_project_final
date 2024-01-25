@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.bteam.bteam_pro.dao.BoardDao">
+    <select id="selectList" resultType="bvo">
+        select rownum, a.* from openforum a order by rownum desc
+    </select>
+    <select id="selectDetail" resultType="bvo" parameterType="int">
+        select * from openforum where ono = #{ono}
+    </select>
+    <update id="updateViews" parameterType="int">
+        update openforum set views = views + 1 where ono = #{ono}
+    </update>
+    <select id="prevDetail" resultType="pvo" parameterType="int">
+        SELECT * from(select ono, oname, oregdate,
+        LAG(ono) OVER (ORDER BY ono) prevno,
+        LAG(oname) OVER (ORDER BY ono) prevname,
+        LAG(oregdate) OVER (ORDER BY ono) prevdate
+        FROM openforum ORDER BY ono) where ono = #{ono}
+    </select>
+    <select id="nextDetail" resultType="nvo" parameterType="int">
+        SELECT * from(select ono, oname, oregdate,
+        LEAD(ono) OVER (ORDER BY ono) nextno,
+        LEAD(oname) OVER (ORDER BY ono) nextname,
+        LEAD(oregdate) OVER (ORDER BY ono) nextdate
+        FROM openforum ORDER BY ono) where ono = #{ono}
+    </select>
+
+    <!-- 자주 묻는 질문 -->
+    <select id="faqList" resultType="faqvo">
+        SELECT * FROM faqboard
+    </select>
+    <select id="faqDetail" resultType="faqvo" parameterType="String">
+        SELECT * FROM faqboard WHERE OCATEGORY = #{OCATEGORY}
+    </select>
+</mapper>
